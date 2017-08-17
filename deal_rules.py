@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 
 import operator
+import re
 
 
 class Stack:
@@ -84,7 +85,6 @@ class Token:
         "left": 0
     }
 
-
     ordop_pri = {
         "^": 3,
         "*": 2,
@@ -104,6 +104,51 @@ class Token:
     # }
 
 
+    def __init__(self, str):
+        # if int, directly create the object for convenience
+        if isinstance(str, int):
+            self.isoperand = 1
+            self.type = "dec_num"
+            self.element = str # here the element of int type
+
+        #============== string cases ==============
+        # operators
+        for item in Token.ops:
+            if str in eval("Token."+item):
+                self.isoperand = 0
+                self.type = item
+                self.element = str
+                return
+
+        if str in Token.extraop:
+            self.isoperand = 0
+            self.type = Token.extraop[str]
+            self.element = str
+
+        # operand
+        else:
+            self.isoperand = 1
+            [type, element] = self.operand_transfer(str)
+            self.type = type
+            self.element = element
+
+
+    def operand_transfer(self, str): # if the operand is string, it may be the head of the csv file
+        if str.isdigit(): # decimal number
+            return ["dec_num", int(str)]
+        elif re.compile("^0x[0-9a-fA-F]+").match(str): # hexadecimal number
+            return ["hex_num", hex(int(str, 16))]
+        else: # string case
+            # col_type = Expr.col_type
+            # if str in col_type: # the string is the head of the csv
+            #     return ["head", str]
+            # else:
+                return ["string", str]
+            # Notice str case includes many circumstances such as expression with condition and function
+
+
+    def show(self):
+        print (self.isoperand, '\t', self.type, '\t', self.element)
 
 
 
@@ -111,3 +156,9 @@ class Token:
 class judge:
     def __init__(self,expression):
         self.expression = expression
+
+
+
+if __name__ == "__main__":
+    a = Token("+")
+    a.show()
