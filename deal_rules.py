@@ -2,6 +2,7 @@
 
 import operator
 import re
+import collections
 
 
 class Stack:
@@ -39,6 +40,35 @@ def oror(a, b):
         return 1
     else:
         return 0
+
+def whitespace(a):
+    white_space = [' ', '\t', '\n', '\v', '\r', '\f']
+    if a in white_space:
+        return True
+    else:
+        return False
+
+
+
+
+class Expr:
+    df = None
+    col_type = None
+
+    def __init__(self, expression, filename):
+        self.expression = expression
+        self.modify()
+
+        csv_dict = readCsv(filename)
+        Expr.df = csv_dict["df"]
+        Expr.col_type = csv_dict["col_type"]
+
+        self.err_row_dict  = collections.OrderedDict()  # result list according to row
+        self.err_rule_dict = collections.OrderedDict()  # result list according to rule
+
+        self.count_reserved = {}  # used to save variables for count function
+
+
 
 
 class Token:
