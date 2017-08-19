@@ -70,6 +70,32 @@ class Expr:
 
 
 
+    def modify(self):
+        expr_list = self.expression.strip().split('\n')
+        print ("Original rules \t", expr_list)
+
+        # split the parentheses with other characters for convenience
+        new_list = []
+        parentheses = ['(',')','[',']']
+        for rule in expr_list:
+            for seq in parentheses:
+                split_list = rule.split(seq)
+                for i in range(len(split_list)):
+                    split_list[i] = split_list[i].strip(' ')
+                new_seq = ' '+seq+' '
+                rule = new_seq.join(split_list)
+            new_list.append(rule)
+
+        # delete empty rules
+        tmp_list = new_list.copy()
+        for rule in tmp_list:
+            if whitespace(rule) or rule=='':
+                new_list.remove(rule)
+
+        self.rules = new_list
+        print ("Modified rules \t", self.rules, '\n')
+
+
 
 class Token:
     ops = ["ordop", "compop", "logicop"]
