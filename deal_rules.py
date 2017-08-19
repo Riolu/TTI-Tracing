@@ -97,6 +97,47 @@ class Expr:
 
 
 
+    # here slice the rule and simulate read_rule() for every single rule for each row
+    # the reason to split the expression into rules is that this small part can be included in the err_list if wrong
+    def judge(self):
+        (df_row, df_col) = Expr.df.shape
+
+        for rule in self.rules:
+            self.err_rule_dict[rule] = []
+
+        #df_row = 5 # this is used for test
+        for row in range(df_row):
+            print ("This is", row, "row!")
+            for rule in self.rules:
+                if not self.read_rule(rule, row):
+                    if row not in self.err_row_dict:
+                        self.err_row_dict[row] = []
+
+                    self.err_row_dict[row].append(rule)
+                    self.err_rule_dict[rule].append(row)
+
+        # delete rules which is correct for all
+        tmp_dict = self.err_rule_dict.copy()
+        for k, v in tmp_dict.items():
+            if len(v) == 0:
+                self.err_rule_dict.pop(k)
+
+        print ('\n')
+        print (self.err_row_dict)
+        print (self.err_rule_dict)
+        print ("======================================\n")
+
+
+
+    def show(self):
+        print (self.expression)
+
+
+
+
+
+
+
 class Token:
     ops = ["ordop", "compop", "logicop"]
 
