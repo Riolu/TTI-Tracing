@@ -1,4 +1,5 @@
-# -*- coding:utf-8 -*-
+#!/usr/bin/env python
+#  -*- coding:utf-8 -*-
 
 import operator
 import re
@@ -131,6 +132,55 @@ class Expr:
 
     def show(self):
         print (self.expression)
+
+
+
+    # 中缀表达式
+    # 依次读入表达式每一项
+    # 操作数 压入操作数栈
+    # 操作符 考虑当前操作符与操作符栈顶的符号 出栈知道当前优先级高于栈顶的优先级
+    # ( 继续
+    # ) 出栈知道左括号
+    #
+    # read a rule in a certain line, and the result must be boolean
+    def read_rule(self, str, row):
+        opStack  = Stack()  # operator stack
+        numStack = Stack()  # operand stack
+        pos = 0
+
+        while pos < len(str):
+            token, pos, token_type = self.get_token(str, pos)
+            if token.element == "":  # for cases that the blank appears in the end
+                break
+            token.show()
+
+            #!!!! remains a lot
+
+
+
+    # 分为两类 操作数和操作符
+    # 操作数 分为 字符串 10进制数 16进制数
+    # 操作符 分为 基本 比较 逻辑操作符 其他（括号）
+    # 如果带条件 则将条件与该条件约束的表达式当做一个token
+    # 如果是函数 整体当做一个token
+
+    # The function skips the whitespaces and captures a continuous string
+    # for Condition or Function, the whole Condition or Function is read as one token
+    def get_token(self, str, pos):
+        token_type = 0  # 0-normal token  1-token with condition  3-token of function
+        while pos<len(str) and whitespace(str[pos]):  # skip the whitespace
+            pos = pos + 1
+            if pos == len(str):
+                return Token(""), pos, token_type
+
+        curstr = ""
+
+
+
+
+
+
+
 
 
 
