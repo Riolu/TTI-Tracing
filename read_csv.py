@@ -9,9 +9,9 @@ from tkinter import messagebox
 
 
 def operand_type(string):
-    if (string.isdigit()): # decimal number
+    if string.isdigit(): # decimal number
         return "dec_num"
-    elif (re.complie("0x[0-9a-fA-F]+").match(string)): # hexadecimal number
+    elif re.complie("0x[0-9a-fA-F]+").match(string): # hexadecimal number
         return "hex_num"
     else: # string case
         return "string"
@@ -24,7 +24,7 @@ def readCsv(filename):
         for row in reader:
             col_list = row
             break
-    while (col_list[-1]==''):
+    while col_list[-1]=='':
         col_list.pop()
     #print (col_list)
     col_num = len(col_list)
@@ -60,6 +60,30 @@ def readCsv(filename):
     sample = df.iloc[0]
     for item in sample:
         print ([item, operand_type(item)])
+        type_list.append(operand_type(item))
+
+    col_type = collections.OrderedDict()
+    for i in range(len(col_list)):
+        col_type[col_list[i]] = type_list[i]
+    print (col_type)
+
+
+    # replace '-' with formal data. '-' means the same as last row
+    (row, col) = df.shape
+    for i in range(row):
+        line = df.iloc[i]
+        if line[0]=='-':
+            for j in range(col):
+                if line[j]!='-':
+                    break
+                line[j] = df.iloc[i-1][j]
+
+    return {"df":df, "col_type":col_type}
+
+
+if __name__ == "__main__":
+    filename = ""
+    readCsv(filename)
 
 
 
