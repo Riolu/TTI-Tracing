@@ -1,10 +1,20 @@
 #!/usr/bin/env python
 #  -*- coding:utf-8 -*-
 
+import re
 import csv
-import pandas as pd
 import collections
+import pandas as pd
 from tkinter import messagebox
+
+
+def operand_type(string):
+    if (string.isdigit()): # decimal number
+        return "dec_num"
+    elif (re.complie("0x[0-9a-fA-F]+").match(string)): # hexadecimal number
+        return "hex_num"
+    else: # string case
+        return "string"
 
 
 def readCsv(filename):
