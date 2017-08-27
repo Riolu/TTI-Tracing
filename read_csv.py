@@ -11,7 +11,7 @@ from tkinter import messagebox
 def operand_type(string):
     if string.isdigit(): # decimal number
         return "dec_num"
-    elif re.complie("0x[0-9a-fA-F]+").match(string): # hexadecimal number
+    elif re.compile("0x[0-9a-fA-F]+").match(string): # hexadecimal number
         return "hex_num"
     else: # string case
         return "string"
@@ -59,7 +59,7 @@ def readCsv(filename):
     type_list = []
     sample = df.iloc[0]
     for item in sample:
-        print ([item, operand_type(item)])
+        #print ([item, operand_type(item)])
         type_list.append(operand_type(item))
 
     col_type = collections.OrderedDict()
