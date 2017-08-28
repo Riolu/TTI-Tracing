@@ -158,6 +158,8 @@ class Expr:
 
 
 
+
+
     # 分为两类 操作数和操作符
     # 操作数 分为 字符串 10进制数 16进制数
     # 操作符 分为 基本 比较 逻辑操作符 其他（括号）
@@ -174,6 +176,40 @@ class Expr:
                 return Token(""), pos, token_type
 
         curstr = ""
+
+        # this is the beginning sign of the condition
+        if str[pos]=='[':
+            token_type = 1
+            pos = pos+1
+            while pos<len(str) and str[pos]!=']':
+                curstr = curstr + str[pos]
+                pos = pos + 1
+            pos = pos +1 # skip ']'
+
+            curstr = curstr + " $ "
+
+            while pos<len(str) and whitespace(str[pos]):
+                pos = pos + 1
+
+            if str[pos]=='(': # find pairing ')'
+                pos = pos + 1
+                left_count = 1
+                while pos<len(str):
+                    if str[pos]=='(':
+                        left_count = left_count + 1
+                    if str[pos]==')':
+                        left_count = left_count - 1
+                    if left_count==0:
+                        break
+                    curstr = curstr + str[pos]
+                    pos = pos +1
+                pos = pos + 1 #skip ')'
+
+            else: # this is a global condition
+                curstr = curstr + str[pos:]
+                pos = len(str) # next character to read is out of index
+
+            # now the curstr is of a $ b form where a is the condition while b is the content
 
 
 
