@@ -338,6 +338,15 @@ class Expr:
 
 
 
+    def valid_cal(self,type1, type2):
+        if type1 == type2:
+            return True
+        if type1=="dec_num" and type2=="hex_num"  or  type1=="hex_num" and type2=="dec_num":
+            return True
+        return False
+
+
+
 
 
 
