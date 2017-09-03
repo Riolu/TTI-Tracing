@@ -317,8 +317,28 @@ class Expr:
     # token1>token2 return 1
     # token1=token2 return 0
     # token1<token2 return -1
-    def operand_pri(self):
-        pass
+    def operand_pri(self, token1, token2):
+        prior = Token.general_pri
+        if prior[token1.type] > prior[token2.type]:
+            return 1
+        elif prior[token1.type] < prior[token2.type]:
+            return -1
+        else: # same type
+            if token1.type == "comop":
+                return 0
+
+            dic = eval("Token."+token1.type+"_pri")
+            #print (dic)
+            if dic[token1.element]>dic[token2.element]:
+                return 1
+            elif dic[token1.element]<dic[token2.element]:
+                return -1
+            else:
+                return 0
+
+
+
+
 
 
 
