@@ -54,7 +54,7 @@ def readCsv(filename):
         tmp_df = pd.DataFrame(df.values, columns=col_list)
         tmp_df.to_csv(filename, index=False)
         df = tmp_df
-    print (df)
+    #print (df)
 
     type_list = []
     sample = df.iloc[0]

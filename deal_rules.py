@@ -1,10 +1,18 @@
 #!/usr/bin/env python
 #  -*- coding:utf-8 -*-
 
-import operator
+from read_csv import *
+
 import re
+import time
+import operator
 import collections
 
+
+class RuleError(Exception):
+    def __init__(self, err):
+        Exception.__init__(self)
+        self.err = err
 
 class Stack:
     def __init__(self):
@@ -154,7 +162,82 @@ class Expr:
                 break
             token.show()
 
-            #!!!! remains a lot
+            if token_type == 1: # if the token is with a condition, use the read_rule() recursively to process the condition expression
+                [condition, rule_with_cond] = token.element.split('$')
+                print ("deal with conditon: " + condition)
+                condition_res = self.read_rule(condition, row)
+                #print (condition_res)
+                if condition_res == False: # condition not satisfied, skip
+                    print ("Condition " + condition + " not satisfied.")
+                    numStack.push( Token(int(True)) )
+                else:
+                    print ("Condition " + condition + " is satisfied. Now move on.")
+                    numStack.push( Token(int(self.read_rule(rule_with_cond))) )
+                continue
+
+            if token_type == 2: # if the token is a function
+                [func, parameter] = token.element.split('$')
+                func = func.strip()
+                if parameter not in self.count_reserved:
+                    self.count_reserved[parameter] = {}
+                    count_reserved_dict = self.count_reserved[parameter]
+                    count_reserved_dict["func_res"] = 0
+                    count_reserved_dict["nextrow"]  = 0
+
+                count_reserved_dict = self.count_reserved[parameter]
+                if row == count_reserved_dict["nextrow"]: # this means another tick starts, or the func_res and nextrow remain the same
+                    count_reserved_dict["func_res"], count_reserved_dict["nextrow"] = Token.function[func](self, parameter, row)
+
+                print ("function result:", count_reserved_dict["func_res"], "\t nextrow:", count_reserved_dict["nextrow"])
+                numStack.push( Token(count_reserved_dict["func_res"]) )
+                continue
+
+
+            if token.isoperand:
+                numStack.push(token_type)
+            else:
+                #print (token.element)
+                if token.element == '(':
+                    opStack.push(token)
+
+                elif token.element == ')':
+                    while not opStack.empty() and (opStack.top()).element != '(':
+                        tmp_op = opStack.top()
+                        opStack.pop()
+                        num2 = numStack.top()
+                        numStack.pop()
+                        num1 = numStack.top()
+                        numStack.pop()
+                        result = self.cal(num1, num2, tmp_op, row)
+                        numStack.push(result)
+                    opStack.pop() # pop corresponding '('
+
+                else:
+                    while not opStack.empty() and self.operand_pri(token, opStack.top())<=0: #priority[cur_op]<=priority[opStack.top()]
+                        tmp_op = opStack.top()
+                        opStack.pop()
+                        num2 = numStack.top()
+                        numStack.pop()
+                        num1 = numStack.top()
+                        numStack.pop()
+                        result = self.cal(num1, num2, tmp_op, row)
+                        numStack.push(result)
+                    opStack.push(token)
+
+        while not opStack.empty():
+            tmp_op = opStack.top()
+            opStack.pop()
+            num2 = numStack.top()
+            numStack.pop()
+            num1 = numStack.top()
+            numStack.pop()
+            result = self.cal(num1, num2, tmp_op, row)
+            numStack.push(result)
+
+        return bool( numStack.top().element )
+
+
+
 
 
 
@@ -210,6 +293,32 @@ class Expr:
                 pos = len(str) # next character to read is out of index
 
             # now the curstr is of a $ b form where a is the condition while b is the content
+
+
+        else:
+            while pos<len(str) and not whitespace(str[pos]): # get a continuous string
+                curstr = curstr + str[pos]
+                pos = pos + 1
+
+        #print (curstr)
+
+        if curstr in Token.function: # the curstr is the function name
+            token_type = 2
+            function_content, pos = self.get_content(str, pos)
+            curstr = curstr + ' $ ' + function_content
+
+
+        token = Token(curstr)
+        return token, pos, token_type
+
+
+
+    # 运算符优先级比较
+    # token1>token2 return 1
+    # token1=token2 return 0
+    # token1<token2 return -1
+    def operand_pri(self):
+        pass
 
 
 
