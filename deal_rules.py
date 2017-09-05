@@ -347,7 +347,16 @@ class Expr:
 
 
 
+    def replace_with_csv(self, token, row): # the token's type is "head"
+        col_type = Expr.col_type
+        df = Expr.df
+        cor_element = df.iloc[row][token.element] # this is string reading from csv
+        #print (cor_element)
+        return Token(cor_element)
 
+
+
+    def cal(self, num1, num2):
 
 
 
