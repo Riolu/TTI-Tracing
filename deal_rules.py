@@ -356,7 +356,26 @@ class Expr:
 
 
 
-    def cal(self, num1, num2):
+    def cal(self, num1, num2, cur_op, row, condition=None): # all of the parameters are of the token form
+        print (cur_op.element, num1.element, num2.element)
+
+        if num1.type == "head":
+            num1 = self.replace_with_csv(num1, row)
+            print (cur_op.element, num1.element, num2.element)
+        if num2.type == "head":
+            num2 = self.replace_with_csv(num2, row)
+            print (cur_op.element, num1.element, num2.element)
+
+        # first we should judge whether type are the same
+        if not self.valid_cal(num1.type, num2.type):
+            print (num1.type, num2.type)
+            print ("Errors occurred in the rule.")
+            raise RuleError("not the same type")
+
+        # calculate according to the type
+        if num1.type == "hex_num" or num2.type == "hex_num":
+            num1_dec = Token(int(num1.element,16)) if num1.type=="hex_num" else num1
+
 
 
 
