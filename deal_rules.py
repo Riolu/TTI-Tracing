@@ -375,6 +375,34 @@ class Expr:
         # calculate according to the type
         if num1.type == "hex_num" or num2.type == "hex_num":
             num1_dec = Token(int(num1.element,16)) if num1.type=="hex_num" else num1
+            num2_dec = Token(int(num2.element,16)) if num2.type=="hex_num" else num2
+
+            for op in Token.ops:
+                if cur_op.element in eval("Token."+op):
+                    ans = eval("Token."+op)[cur_op.element](num1_dec.element, num2_dec.element)
+                    if isinstance(ans, bool): # simplify bool type
+                        ans = int(ans)
+                    else:
+                        ans = hex(ans)
+                    print (ans)
+                    return Token(ans)
+
+        if num1.type == "dec_num":
+            for op in Token.ops:
+                if cur_op.element in eval("Token."+op):
+                    ans = eval("Token."+op)[cur_op.element](num1.element, num2.element)
+                    if isinstance(ans, bool):
+                        ans = int(ans)
+                    print (ans)
+                    return Token(ans)
+
+        if num1.type == "string":
+            if cur_op.element == "==":
+                ans = num1.element==num2.element
+                ans = int(ans)
+                print (ans)
+                return Token(ans)
+
 
 
 
