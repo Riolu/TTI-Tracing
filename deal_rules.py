@@ -405,6 +405,33 @@ class Expr:
 
 
 
+    def get_content(self, str, pos): # this function is to find content content between ()
+        while pos<len(str) and whitespace(str[pos]):
+            pos = pos + 1
+
+        curstr = ""
+        if str[pos] == '(': # skip '('
+            pos = pos + 1
+            left_count = 1
+            while pos<len(str):
+                if str[pos]=='(':
+                    left_count = left_count + 1
+                if str[pos]==')':
+                    left_count = left_count - 1
+                if left_count==0:
+                    break
+                curstr = curstr + str[pos]
+                pos = pos + 1
+            pos = pos + 1 # skip ')'
+        return curstr, pos
+
+
+
+
+
+
+
+
 
 
 
