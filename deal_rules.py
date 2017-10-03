@@ -620,8 +620,10 @@ if __name__ == "__main__":
 
     # Notice the final result of the expression should be a boolean value
 
-    expression = "1 == 1 "
-    #expression = "bit16PucchScheInfoTag == 0x8003"
+    #expression = "1 == 1 "
+    #expression = "5 == 1 + 4"
+    #expression = "ABC == ABC"
+    expression = "bit16PucchScheInfoTag == 0x8003"
 
     filename = "Sample.csv"
     a = Expr(expression, filename)

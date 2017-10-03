@@ -1,0 +1,222 @@
+#!/usr/bin/env python
+#  -*- coding:utf-8 -*-
+
+from deal_rules import *
+from read_csv import readCsv
+
+import os
+import sys
+import tkinter as tk
+from tkinter import ttk
+from tkinter import filedialog
+from tkinter.filedialog import *
+from tkinter import messagebox
+import win32clipboard as win
+import win32con
+
+
+def cur_file_dir(): # 获取脚本文件的当前路径
+    path = sys.path[0] # 获取脚本路径
+    # 判断为脚本文件还是py2exe编译后的文件，如果是脚本文件，则返回的是脚本的目录，如果是py2exe编译后的文件，则返回的是编译后的文件路径
+    if os.path.isdir(path):
+        return path
+    elif os.path.isfile(path):
+        return os.path.dirname(path)
+
+def getText(): # 复制函数
+    win.OpenClipboard()
+    d = win.GetClipboardData(win32con.CF_UNICODETEXT)
+    win.CloseClipboard()
+    return d
+
+def setText(aString): # 粘贴函数
+    win.OpenClipboard()
+    win.EmptyClipboard()
+    win.SetClipboardData(win32con.CF_UNICODETEXT, aString)
+    win.CloseClipboard()
+
+
+class Application(tk.Tk):
+    def __init__(self):
+        super().__init__() # 有点相当于tk.Tk()
+        self.createWidgets()
+        self.result_type = "row"
+
+        self.project_dir = cur_file_dir()
+        self.csv_dir = self.project_dir + "\\csv"
+        self.rule_dir = self.project_dir + "\\rule"
+        self.result_dir = self.project_dir + "\\result"
+        if not os.path.exists(self.csv_dir):
+            os.makedirs(self.csv_dir)
+        if not os.path.exists(self.rule_dir):
+            os.makedirs(self.rule_dir)
+        if not os.path.exists(self.result_dir):
+            os.makedirs(self.result_dir)
+
+
+    def createWidgets(self):
+        self.title("Analytical Tools for TTI Trace")
+        self.resizable(width=False, height=False)
+        self.columnconfigure(0, minsize=50)
+
+        topframe = tk.Frame(self)
+        topframe.pack(side=tk.TOP)
+        ruleframe = tk.Frame(self, width=580, height=230) # 由于元素使用pack这里必须设定width和height 否则frame不会显示
+        ruleframe.pack(side=tk.TOP)
+        resultframe = tk.Frame(self, width=580, height=350)
+        resultframe.pack(side=tk.TOP)
+
+
+
+        # 顶部区域
+        glabel = tk.Label(topframe, text="Target file:")
+        self.entryvar = tk.StringVar()
+        gentry = tk.Entry(topframe, textvariable=self.entryvar, width=30)
+        gbutton = tk.Button(topframe, command=self.__openfile, text='...')
+        # -- 放置位置
+        glabel.grid(row=0, column=0, sticky=tk.W)
+        gentry.grid(row=0, column=1)
+        gbutton.grid(row=0, column=2)
+
+        # -- 绑定事件
+        gentry.bind('<Return>', func=self.__refresh)
+
+
+
+        # 中部rule区域
+        rulelabel = tk.Label(ruleframe, text="Please input the judge rules")
+        ruletext_frame = tk.Frame(ruleframe) # 放rule_text和rule_rightbar, rule_bottombar
+        rule_rightbar = tk.Scrollbar(ruletext_frame, orient=tk.VERTICAL)
+        rule_bottombar = tk.Scrollbar(ruletext_frame, orient=tk.HORIZONTAL)
+        self.rule_text = tk.Text(ruletext_frame, width=80, height=10, yscrollcommand=rule_rightbar.set, xscrollcommand=rule_bottombar.set, wrap="none") # 设置滚动条 - 不换行
+        # font = {"宋体"，12, "normal"}
+        headlabel = tk.Label(ruleframe, text="Field Name")
+        self.head_keyvar = tk.StringVar()
+        self.head_keyvar.set("Title in CSV")
+        self.headcombobox = ttk.Combobox(ruleframe, values=["Empty"], textvariable=self.head_keyvar, state="disabled")
+        headbutton = tk.Button(ruleframe, text="Add", command=self.__add_head)
+        clearbutton= tk.Button(ruleframe, text="  Clear  ", command=self.__clear_rule)
+        rulebutton = tk.Button(ruleframe, text="Analyze", command=self.__analyze)
+
+        # -- 放置位置
+        rule_rightbar.pack(side=tk.RIGHT, fill=tk.Y)
+        rule_bottombar.pack(side=tk.BOTTOM, fill=tk.X)
+        self.rule_text.pack(side=tk.LEFT, fill=tk.BOTH)
+
+        rulelabel.place(x=0, y=0)
+        ruletext_frame.place(x=0, y=20)
+
+        headlabel.place(x=5, y=int(ruletext_frame.place_info()['y'])+165)
+        self.headcombobox.place(x=80, y=int(headlabel.place_info()['y']))
+        headbutton.place(x=250, y=int(headlabel.place_info()['y'])-5)
+        clearbutton.place(x=440, y=int(headlabel.place_info()['y'])-5)
+        rulebutton.place(x=510, y=int(headlabel.place_info()['y'])-5)
+
+        # -- 绑定事件
+        rule_rightbar.config(command=self.rule_text.yview)
+        rule_bottombar.config(command=self.rule_text.xview)
+        self.rule_text.bind('<Button-3>', func=self.__popup)
+
+
+
+        # 结果区域
+        result_label = tk.Label(resultframe, text="Analysis Result")
+        resulttext_frame = tk.Frame(resultframe) # 放rule_text和rule_rightbar
+        result_rightbar = tk.Scrollbar(resulttext_frame, orient=tk.VERTICAL)
+        result_bottombar = tk.Scrollbar(resulttext_frame, orient=tk.HORIZONTAL)
+        self.result_text = tk.Text(resulttext_frame, width=80, height=20, yscrollcommand=result_rightbar.set, xscrollcommand=result_bottombar.set, wrap="none")
+        self.switchbutton = tk.Button(resultframe, text="Switch Result", command=self.switch_result, state="disabled")
+
+        # -- 放置位置
+        result_rightbar.pack(side=tk.RIGHT, fill=tk.Y)
+        result_bottombar.pack(side=tk.BOTTOM, fill=tk.X)
+        self.result_text.pack(side=tk.LEFT, fill=tk.BOTH)
+
+        result_label.place(x=0, y=0)
+        resulttext_frame.place(x=0, y=20)
+        self.switchbutton.place(x=510, y=310)
+
+        # -- 绑定事件
+        result_rightbar.config(command=self.result_text.yview)
+        result_bottombar.config(command=self.result_text.xview)
+
+
+        edit_items = ['Cut', 'Copy', 'Paste', 'Delete']
+        self.Rbtnmenubar = tk.Menu(self, tearoff=0)
+        self.Rbtnmenubar.add_command(label=edit_items[0], command=self.__cut_clk)
+        self.Rbtnmenubar.add_command(label=edit_items[1], command=self.__copy_clk)
+        self.Rbtnmenubar.add_command(label=edit_items[2], command=self.__paste_clk)
+        self.Rbtnmenubar.add_command(label=edit_items[3], command=self.__delete_clk)
+
+
+    def __popup(self, event): # 右键弹出
+        self.Rbtnmenubar.post(event.x_root, event.y_root)
+
+    def __cut_clk(self): # 剪切右键的回调
+        try:
+            setText(self.rule_text.get(SEL_FIRST,SEL_LAST))
+            self.rule_text.delete(SEL_FIRST,SEL_LAST)
+        except: pass
+
+    def __copy_clk(self): # 复制右键的回调
+        try:
+            setText(self.rule_text.get(SEL_FIRST,SEL_LAST))
+        except: pass
+
+    def __paste_clk(self): # 粘贴右键的回调
+        self.rule_text.insert(INSERT, getText())
+
+    def __delete_clk(self): #剪切右键的回调
+        try:
+            self.rule_text.delete(SEL_FIRST,SEL_LAST)
+        except: pass
+
+
+    def __openfile(self):
+        self.filename = filedialog.askopenfilename(title="Open File", initialdir=self.csv_dir, filetypes=[('CSV File','*.csv'),('All Files','*')])
+        self.entryvar.set(self.filename)
+
+        if not self.filename:
+            pass
+        else:
+            try:
+                col_type = readCsv(self.filename)["col_type"]
+                self.head_keyvar.set("Title in CSV")
+                self.headcombobox["values"] = list(col_type.keys()) # modify the combobox after csv is read
+                self.headcombobox["state"] = "normal"
+                self.result_text.delete('1.0', tk.END)
+                self.result_text.insert(tk.END, "Loaded " + self.filename + "\n\n")
+            except:
+                messagebox.showerror("Error", message="The file cannot be opened, please try again.")
+
+    def __refresh(self):
+        self.filename = self.entryvar.get()
+        # self.textbox.insert(tk.END, self.filename+"\r\n")
+        # self.textbox.update()
+
+    def __analyze(self):
+        self.rule = self.rule_text.get('1.0', tk.END)
+        if self.rule=='\n':
+            messagebox.showwarning("Warning", message="Please Input the Judge Rules!")
+        else:
+            try:
+                a = Expr(self.rule, self.filename)
+                a.judge()
+                err_row_dict = a.err_row_dict
+                err_rule_dict = a.err_rule_dict
+
+
+
+
+
+
+
+
+if __name__ == '__main__':
+    # 实例化Application
+    app = Application()
+
+    app.mainloop()
+
+
+
