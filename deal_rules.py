@@ -423,9 +423,35 @@ class Expr:
                 curstr = curstr + str[pos]
                 pos = pos + 1
             pos = pos + 1 # skip ')'
+
         return curstr, pos
 
 
+
+    def replace_same(self, str, row):
+        df = Expr.df
+        new_rule = ""
+        pos = 0
+
+        # replace the parameters with the formal ones
+        while pos<len(str):
+            while pos<len(str) and whitespace(str[pos]): # skip the whitespace
+                pos = pos + 1
+
+            curstr = ""
+            while pos<len(str) and not whitespace(str[pos]): # get a continuous string
+                curstr = curstr + str[pos]
+                pos = pos + 1
+            #print (curstr)
+
+            if len(curstr)>5 and curstr[0:5]=="same_":
+                head = curstr[5:]
+                new_rule = new_rule + head + " == " + df.iloc[row][head] + ' '
+                continue
+
+            new_rule = new_rule + curstr + ' ' # the other remain the same
+
+        return new_rule
 
 
 
