@@ -455,15 +455,45 @@ class Expr:
 
 
 
+    def count(self, str, row): # parameter is of string form
+        # start from "row"
+        print ("Process count function: " + str)
 
+        df = Expr.df
+        (df_row, df_col) = df.shape
 
+        parameter_list = str.split(',')
+        if len(parameter_list) == 1:
+            [arguments] = parameter_list
+            constraint = None
+        else:
+            [arguments, constraint] = parameter_list
+        arguments = arguments.strip()
 
+        if constraint!=None:
+            constraint = self.replace_same(constraint, row)
 
+        print (arguments)
+        print (constraint)
 
+        tmp_row = row
+        tmp_list = []
+        while tmp_row < df_row:
+            print ("tmp_row", tmp_row)
+            if constraint==None:
+                if df.iloc[tmp_row][arguments] not in tmp_list:
+                    tmp_list.append(df.iloc[tmp_row][arguments])
+                tmp_row = tmp_row + 1
+            else:
+                meet_constraint = self.read_rule(constraint, tmp_row)
+                if meet_constraint==False:
+                    break
+                if df.iloc[tmp_row][arguments] not in tmp_list:
+                    tmp_list.append(df.iloc[tmp_row][arguments])
+                tmp_row = tmp_row + 1
 
-
-
-
+        #print (tmp_list)
+        return (len(tmp_list), tmp_row)
 
 
 
