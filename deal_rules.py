@@ -194,7 +194,7 @@ class Expr:
 
 
             if token.isoperand:
-                numStack.push(token_type)
+                numStack.push(token)
             else:
                 #print (token.element)
                 if token.element == '(':
@@ -559,9 +559,9 @@ class Token:
         "||": 1
     }
 
-    # function = {
-    #
-    # }
+    function = {
+        "count": Expr.count
+    }
 
 
     def __init__(self, str):
@@ -570,6 +570,7 @@ class Token:
             self.isoperand = 1
             self.type = "dec_num"
             self.element = str # here the element of int type
+            return
 
         #============== string cases ==============
         # operators
@@ -599,10 +600,10 @@ class Token:
         elif re.compile("^0x[0-9a-fA-F]+").match(str): # hexadecimal number
             return ["hex_num", hex(int(str, 16))]
         else: # string case
-            # col_type = Expr.col_type
-            # if str in col_type: # the string is the head of the csv
-            #     return ["head", str]
-            # else:
+            col_type = Expr.col_type
+            if str in col_type: # the string is the head of the csv
+                return ["head", str]
+            else:
                 return ["string", str]
             # Notice str case includes many circumstances such as expression with condition and function
 
@@ -613,12 +614,19 @@ class Token:
 
 
 
-class judge:
-    def __init__(self,expression):
-        self.expression = expression
-
-
 
 if __name__ == "__main__":
-    a = Token("+")
-    a.show()
+    start = time.clock()
+
+    # Notice the final result of the expression should be a boolean value
+
+    expression = "1 == 1 "
+    #expression = "bit16PucchScheInfoTag == 0x8003"
+
+    filename = "Sample.csv"
+    a = Expr(expression, filename)
+    a.judge()
+
+
+    end = time.clock()
+    print ("process time: %f s" % (end - start))

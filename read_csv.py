@@ -65,7 +65,7 @@ def readCsv(filename):
     col_type = collections.OrderedDict()
     for i in range(len(col_list)):
         col_type[col_list[i]] = type_list[i]
-    print (col_type)
+    #print (col_type)
 
 
     # replace '-' with formal data. '-' means the same as last row
