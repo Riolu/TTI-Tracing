@@ -23,13 +23,13 @@ def cur_file_dir(): # 获取脚本文件的当前路径
     elif os.path.isfile(path):
         return os.path.dirname(path)
 
-def getText(): # 复制函数
+def getText():
     win.OpenClipboard()
     d = win.GetClipboardData(win32con.CF_UNICODETEXT)
     win.CloseClipboard()
     return d
 
-def setText(aString): # 粘贴函数
+def setText(aString):
     win.OpenClipboard()
     win.EmptyClipboard()
     win.SetClipboardData(win32con.CF_UNICODETEXT, aString)
@@ -205,7 +205,77 @@ class Application(tk.Tk):
                 err_row_dict = a.err_row_dict
                 err_rule_dict = a.err_rule_dict
 
+                # 分析结果 以row为顺序
+                self.result_row_str = "Current File:" + self.filename + "\n\n"
+                if len(err_row_dict)==0:
+                    self.result_row_str = self.result_row_str + "No Error!\n"
+                else:
+                    for row, row_list in err_row_dict.items():
+                        self.result_row_str = self.result_row_str + "Error Line:" + str(row+2) + "\n" # 对应csv中行号
+                        for err_rule in row_list:
+                            self.result_row_str = self.result_row_str + "Error Rule:" + err_rule + "\n"
+                        self.result_row_str = self.result_row_str + "\n"
 
+
+
+                # 分析结果 以rule为顺序
+                self.result_rule_str = "Current File:" + self.filename + "\n\n"
+                if len(err_row_dict)==0:
+                    self.result_rule_str = self.result_rule_str + "No Error!\n"
+                else:
+                    for rule, rule_list in err_rule_dict.items():
+                        self.result_rule_str = self.result_rule_str + "Error Rule:" + rule + "\n"
+                        for err_row in rule_list:
+                            self.result_rule_str = self.result_rule_str + "Error Line:" + str(row+2) + "\n"
+                        self.result_rule_str = self.result_rule_str + "\n"
+
+                self.result_text.delete('1.0', tk.END)
+                self.result_text.insert(tk.END, self.result_row_str+"\n")
+
+                self.switchbutton["state"] = "normal"
+
+            except:
+                messagebox.showerror("Warning", message = "The judging rule seems to have some error, please revise it and try again.")
+
+
+    def __add_head(self):
+        head = self.headcombobox.get()
+        if head=="Title in CSV":
+            messagebox.showwarning("Warning", message="No head is chosen!")
+        else:
+            self.rule_text.insert(tk.END, head+" ")
+
+    def __clear_rule(self):
+        self.rule_text.delete("1.0", tk.END)
+
+    def switch_result(self):
+        if self.result_type=="row":
+            self.result_text.delete("1.0", tk.END)
+            self.result_text.insert(tk.END, self.result_rule_str+"\n")
+            self.result_type = "rule"
+        else:
+            self.result_text.delete("1.0", tk.END)
+            self.result_text.insert(tk.END, self.result_row_str + "\n")
+            self.result_type = "row"
+
+    def addmenu(self, Menu):
+        # 添加菜单
+        Menu(self)
+
+
+
+class MyMenu():
+    # 菜单类
+
+    def __init__(self, root):
+        # 初始化菜单
+        self.menubar = tk.Menu(root) # 创建菜单栏
+        self.root = root # root是Application的一个实例 由于command如果带()回自动执行，因此将root保存为MyMenu的对象
+
+        # 创建“File”下拉菜单
+        filemenu = tk.Menu(self.menubar, tearoff=0)
+        filemenu.add_command(label="Open File", command=self.file_open)
+        filemenu.add_separator()
 
 
 
