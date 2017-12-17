@@ -172,7 +172,7 @@ class Expr:
                     numStack.push( Token(int(True)) )
                 else:
                     print ("Condition " + condition + " is satisfied. Now move on.")
-                    numStack.push( Token(int(self.read_rule(rule_with_cond))) )
+                    numStack.push( Token(int(self.read_rule(rule_with_cond, row))) )
                 continue
 
             if token_type == 2: # if the token is a function
@@ -620,10 +620,27 @@ if __name__ == "__main__":
 
     # Notice the final result of the expression should be a boolean value
 
-    #expression = "1 == 1 "
-    #expression = "5 == 1 + 4"
-    #expression = "ABC == ABC"
-    expression = "bit16PucchScheInfoTag == 0x8003"
+    # expression = "1 == 1 "
+    # expression = "5 == 1 + 4"
+    # expression = "ABC == ABC"
+
+    # expression = "bit16PucchScheInfoTag == 0x8003"
+    # expression = "Type == MngHead"
+    # expression = "bit16PacketType == 8193"
+
+    # expression = "bit16PucchScheInfoTag == 0x8003 && bit16UserRBStartPos < 60"
+    # expression = "bit16PucchScheInfoTag == 0x8003 \n Type == MngHead"
+
+    # expression = "(bit16UciPktSize = 3)" #test ()
+    # expression = "[bit16UciPktTag == 0x8101] (bit16UciPktSize == 3) || 1 == 1" #test bound of the condition
+    # expression = "[bit16UciPktTag == 0x8102] bit16UciPktSize == 4 || bit16UciPktSize == 6 || bit16UciPktSize == 8 || bit16UciPktSize == 16" #test global condition
+
+    # expression = "bit32UciPktNum == count(bit16UciPktTag, same_bit16UeInst && same_FrmNo && same_SubfrmNo)" #test function
+    # expression = "bit16PucchUserGrpNum == count(bit16UeInst, same_FrmNo && same_SubfrmNo)" #test function
+
+    expression = "bit16PucchScheInfoTag == 0x8003 \n [bit16UciPktTag == 0x8101] (bit16UciPktSize == 3) \n  \
+                 [bit16UciPktTag == 0x8102] bit16UciPktSize == 4 || bit16UciPktSize == 6 || bit16UciPktSize == 8 || bit16UciPktSize == 16"
+
 
     filename = "Sample.csv"
     a = Expr(expression, filename)
