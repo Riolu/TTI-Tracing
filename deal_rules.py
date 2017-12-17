@@ -639,7 +639,8 @@ if __name__ == "__main__":
     # expression = "bit16PucchUserGrpNum == count(bit16UeInst, same_FrmNo && same_SubfrmNo)" #test function
 
     expression = "bit16PucchScheInfoTag == 0x8003 \n [bit16UciPktTag == 0x8101] (bit16UciPktSize == 3) \n  \
-                 [bit16UciPktTag == 0x8102] bit16UciPktSize == 4 || bit16UciPktSize == 6 || bit16UciPktSize == 8 || bit16UciPktSize == 16"
+                 [bit16UciPktTag == 0x8102] bit16UciPktSize == 4 || bit16UciPktSize == 6 || bit16UciPktSize == 8 || bit16UciPktSize == 16 \n \
+                 bit16PucchUserGrpNum == count(bit16UeInst, same_FrmNo && same_SubfrmNo)"
 
 
     filename = "Sample.csv"

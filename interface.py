@@ -134,7 +134,7 @@ class Application(tk.Tk):
 
         result_label.place(x=0, y=0)
         resulttext_frame.place(x=0, y=20)
-        self.switchbutton.place(x=510, y=310)
+        self.switchbutton.place(x=478, y=310)
 
         # -- 绑定事件
         result_rightbar.config(command=self.result_text.yview)
@@ -226,7 +226,7 @@ class Application(tk.Tk):
                     for rule, rule_list in err_rule_dict.items():
                         self.result_rule_str = self.result_rule_str + "Error Rule:" + rule + "\n"
                         for err_row in rule_list:
-                            self.result_rule_str = self.result_rule_str + "Error Line:" + str(row+2) + "\n"
+                            self.result_rule_str = self.result_rule_str + "Error Line:" + str(err_row+2) + "\n"
                         self.result_rule_str = self.result_rule_str + "\n"
 
                 self.result_text.delete('1.0', tk.END)
@@ -276,16 +276,82 @@ class MyMenu():
         filemenu = tk.Menu(self.menubar, tearoff=0)
         filemenu.add_command(label="Open File", command=self.file_open)
         filemenu.add_separator()
+        filemenu.add_command(label="Open Rule", command=self.rule_open)
+        filemenu.add_command(label="Save Rule", command=self.rule_save)
+        filemenu.add_separator()
+        filemenu.add_command(label="Save Result", command=self.result_save)
+        filemenu.add_separator()
+        filemenu.add_command(label="Quit", command=root.quit)
+
+        # 创建“Help”下拉菜单
+        helpmenu = tk.Menu(self.menubar, tearoff=0)
+        helpmenu.add_command(label="About", command=self.help_about)
+
+        # 将前面两个菜单加到菜单栏
+        self.menubar.add_cascade(label="File", menu=filemenu)
+        self.menubar.add_cascade(label="Help", menu=helpmenu)
+
+        # 最后再将菜单栏整个加到窗口 root
+        root.config(menu=self.menubar)
 
 
+    def file_open(self):
+        self.root.filename = filedialog.askopenfilename(title="Open File", initialdir=self.root.csv_dir, filetypes=[('CSV File', '*.csv'), ('All Files', '*')])
+        self.root.entryvar.set(self.root.filename)
+
+        if not self.root.filename:
+            pass
+        else:
+            try:
+                col_type = readCsv(self.root.filename)["col_type"]
+                self.root.head_keyvar.set("Title in CSV")
+                self.root.headcombobox["values"] = list(col_type.keys())  # modify the combobox after csv is read
+                self.root.headcombobox["state"] = "normal"
+                self.root.result_text.delete('1.0', tk.END)
+                self.root.result_text.insert(tk.END, "Loaded " + self.root.filename + "\n\n")
+            except:
+                messagebox.showerror("Error", message="The file cannot be opened, please try again.")
 
 
+    def rule_open(self):
+        rule_name = askopenfilename(title="Open Rule", initialdir=self.root.rule_dir, filetypes=[("Text File",'*.txt')])
+        if rule_name:
+            rule_file = open(rule_name, "r")
+            rule_content = rule_file.read()
+            rule_file.close()
+            self.root.rule_text.delete("1.0", tk.END)
+            self.root.rule_text.insert("1.0", rule_content)
+
+    def rule_save(self):
+        rule_name = asksaveasfilename(title="Save Rule", initialdir=self.root.rule_dir, filetypes=[("Text File",'*.txt')], defaultextension="txt")
+        if rule_name:
+            rule_file = open(rule_name, "w")
+            rule_content = self.root.rule_text.get("1.0", tk.END)
+            rule_file.write(rule_content)
+            rule_file.close()
+            messagebox.showinfo("Info", message="The current rules have been saved.")
+
+    def result_save(self):
+        result_name = asksaveasfilename(title="Save Result", initialdir=self.root.result_dir, filetypes=[("Text File", '*.txt')], defaultextension="txt")
+        if result_name:
+            result_file = open(result_name, "w")
+            result_content = self.root.result_text.get("1.0", tk.END)
+            result_file.write(result_content)
+            result_file.close()
+            messagebox.showinfo("Info", message="The current rules have been saved.")
+
+    def help_about(self):
+        messagebox.showinfo("About", "Author: Kunyan Han \nVersion 1.1")
 
 
 if __name__ == '__main__':
     # 实例化Application
     app = Application()
 
+    # 添加菜单
+    app.addmenu(MyMenu)
+
+    # 主消息循环
     app.mainloop()
 
 
