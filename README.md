@@ -5,7 +5,7 @@ certain TTI file (of csv form) or among multiple TTI files in an efficient manne
 
 Developers are able to trace and analyze TTIs in batches through a set of self-defined rules. Notice a specialized 
 query language is defined in the software, please refer to the user manual for more detailed information. In addition
-to calculation and comparison, other functions including Count and TTI searching are also realized and integrated in
+to basic calculation and comparison, other functions including Count and TTI searching are also realized and integrated in
 the software. An analysis report would be generated in the end. The report is given either according to the error rules,
 or the error lines, in order to meet different requirements of developers.
 
