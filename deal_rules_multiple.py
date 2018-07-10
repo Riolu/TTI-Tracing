@@ -109,6 +109,12 @@ class Expr_multi:
         print ("Modified rules \t", self.rules, '\n')
 
 
+
+    def target_file(self,rule): # rule is of string form
+        file_list = [] # here the index of file are recorded   For example: file_list[1,2] means the first two csv are concerned in this rule
+        
+
+
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     # here slice the rule and simulate read_rule() for every single rule for each row
     # the reason to split the expression into rules is that this small part can be included in the err_list if wrong
