@@ -112,28 +112,49 @@ class Expr_multi:
 
     def target_file(self,rule): # rule is of string form
         file_list = [] # here the index of file are recorded   For example: file_list[1,2] means the first two csv are concerned in this rule
+        pos = 0
+        while pos<len(rule):
+            if rule[pos]=='{':
+                pos = pos+1
+                tmpstr = ""
+                while pos<len(rule):
+                    if rule[pos]=='}':
+                        file_id = tmpstr.split(':')[0]
+                        file_list.append(int(file_id))
+                        break
+                    if not whitespace(rule[pos]):
+                        tmpstr = tmpstr + rule[pos]
+                    pos = pos+1
+            pos = pos+1
+        return file_list
 
 
 
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     # here slice the rule and simulate read_rule() for every single rule for each row
     # the reason to split the expression into rules is that this small part can be included in the err_list if wrong
     def judge(self):
-        (df_row, df_col) = Expr.df.shape
+        file_involved = []
 
         for rule in self.rules:
             self.err_rule_dict[rule] = []
 
-        #df_row = 5 # this is used for test
-        for row in range(df_row):
-            print ("This is", row, "row!")
-            for rule in self.rules:
+        for rule in self.rules:
+            print ("Now deal with the rule:", rule)
+            file_involved = self.target_file(rule)
+            print ("There are ", len(file_involved), "csv file involved:", file_involved)
+
+            self.same_value = [] #empty the list
+
+            file_id = file_involved[0]
+            (df_row, df_col) = Expr_multi.csv_dict_list[file_id-1]["df"].shape
+            # df_row = 1
+            for row in range(df_row):
                 if not self.read_rule(rule, row):
                     if row not in self.err_row_dict:
                         self.err_row_dict[row] = []
-
                     self.err_row_dict[row].append(rule)
                     self.err_rule_dict[rule].append(row)
+
 
         # delete rules which is correct for all
         tmp_dict = self.err_rule_dict.copy()
@@ -145,6 +166,8 @@ class Expr_multi:
         print (self.err_row_dict)
         print (self.err_rule_dict)
         print ("======================================\n")
+
+        return file_involved
 
 
 
@@ -162,9 +185,11 @@ class Expr_multi:
     #
     # read a rule in a certain line, and the result must be boolean
     def read_rule(self, str, row):
+        print (row, "row for the first csv file")
         opStack  = Stack()  # operator stack
         numStack = Stack()  # operand stack
         pos = 0
+        self.same_value = [] # empty the list
 
         while pos < len(str):
             token, pos, token_type = self.get_token(str, pos)
@@ -186,20 +211,66 @@ class Expr_multi:
                 continue
 
             if token_type == 2: # if the token is a function
-                [func, parameter] = token.element.split('$')
-                func = func.strip()
-                if parameter not in self.count_reserved:
-                    self.count_reserved[parameter] = {}
-                    count_reserved_dict = self.count_reserved[parameter]
-                    count_reserved_dict["func_res"] = 0
-                    count_reserved_dict["nextrow"]  = 0
+                pass
 
-                count_reserved_dict = self.count_reserved[parameter]
-                if row == count_reserved_dict["nextrow"]: # this means another tick starts, or the func_res and nextrow remain the same
-                    count_reserved_dict["func_res"], count_reserved_dict["nextrow"] = Token.function[func](self, parameter, row)
+                # [func, parameter] = token.element.split('$')
+                # func = func.strip()
+                # if parameter not in self.count_reserved:
+                #     self.count_reserved[parameter] = {}
+                #     count_reserved_dict = self.count_reserved[parameter]
+                #     count_reserved_dict["func_res"] = 0
+                #     count_reserved_dict["nextrow"]  = 0
+                #
+                # count_reserved_dict = self.count_reserved[parameter]
+                # if row == count_reserved_dict["nextrow"]: # this means another tick starts, or the func_res and nextrow remain the same
+                #     count_reserved_dict["func_res"], count_reserved_dict["nextrow"] = Token.function[func](self, parameter, row)
+                #
+                # print ("function result:", count_reserved_dict["func_res"], "\t nextrow:", count_reserved_dict["nextrow"])
+                # numStack.push( Token(count_reserved_dict["func_res"]) )
+                # continue
 
-                print ("function result:", count_reserved_dict["func_res"], "\t nextrow:", count_reserved_dict["nextrow"])
-                numStack.push( Token(count_reserved_dict["func_res"]) )
+            if token_type == 3: # if the token is head with {} info
+                [info, head] = token.element.split('$')
+                head = head.strip()
+                [file_id, head_str] = info.split(':')
+                file_id = int(file_id.strip());
+
+                same_str = head_str.strip();
+                if len(same_str)==0: # no head_str
+                    numStack.push( Token(self.csv_dict_list[file_id-1]["df"].iloc[row][head]) )
+
+                else:
+                    same_str_list = same_str.split(',')
+                    for i in range(len(same_str_list)):
+                        same_str_list[i] = same_str_list[i].strip();
+
+                    if len(self.same_value)==0: # the first head
+                        for item in same_str_list:
+                            self.same_value.append(self.csv_dict_list[file_id-1]["df"].iloc[row][item])
+                        numStack.push( Token(self.csv_dict_list[file_id-1]["df"].iloc[row][head]) )
+                        print ("same_value is", self.same_value, "\t head is", head)
+
+                    else:
+                        df_2 = self.csv_dict_list[file_id-1]["df"]
+                        (row_2, column_2) = df_2.shape
+
+                        tmp_found = False
+                        for tmp_row in range(row_2):
+                            tmp_same = True
+                            for i in range(len(same_str_list)):
+                                #print (df_2.iloc[tmp_row][same_str_list[i]], self.same_value[i])
+                                if df_2.iloc[tmp_row][same_str_list[i]] != self.same_value[i]:
+                                    tmp_same = False
+                                    break
+                            if tmp_same==True:
+                                tmp_found = True
+                                numStack.push( Token(df_2.iloc[tmp_row][head]) )
+                                print ("found in ", tmp_row, "row in ", file_id, "csv file")
+                                break
+
+                        if not tmp_found:
+                            numStack.push( Token("Pass") )
+
                 continue
 
 
@@ -244,12 +315,10 @@ class Expr_multi:
             result = self.cal(num1, num2, tmp_op, row)
             numStack.push(result)
 
-        return bool( numStack.top().element )
 
-
-
-
-
+        print ("Final result:", numStack.top().element)
+        print ("===============================")
+        return bool( numStack.top().element ) # even if the result is "Pass", it is taken as true
 
 
 
