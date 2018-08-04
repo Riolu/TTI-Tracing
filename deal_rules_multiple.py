@@ -233,16 +233,16 @@ class Expr_multi:
                 [info, head] = token.element.split('$')
                 head = head.strip()
                 [file_id, head_str] = info.split(':')
-                file_id = int(file_id.strip());
+                file_id = int(file_id.strip())
 
-                same_str = head_str.strip();
+                same_str = head_str.strip()
                 if len(same_str)==0: # no head_str
                     numStack.push( Token(self.csv_dict_list[file_id-1]["df"].iloc[row][head]) )
 
                 else:
                     same_str_list = same_str.split(',')
                     for i in range(len(same_str_list)):
-                        same_str_list[i] = same_str_list[i].strip();
+                        same_str_list[i] = same_str_list[i].strip()
 
                     if len(self.same_value)==0: # the first head
                         for item in same_str_list:
@@ -331,7 +331,7 @@ class Expr_multi:
     # The function skips the whitespaces and captures a continuous string
     # for Condition or Function, the whole Condition or Function is read as one token
     def get_token(self, str, pos):
-        token_type = 0  # 0-normal token  1-token with condition  3-token of function
+        token_type = 0  # 0-normal token  1-token with condition  2-token of function  3-token with {} info
         while pos<len(str) and whitespace(str[pos]):  # skip the whitespace
             pos = pos + 1
             if pos == len(str):
@@ -373,6 +373,24 @@ class Expr_multi:
 
             # now the curstr is of a $ b form where a is the condition while b is the content
 
+        elif str[pos]=='{': # this is the beginning sign of which file this head belongs
+            token_type = 3
+            pos = pos + 1 # skip '{'
+            while pos<len(str) and str[pos]!='}':
+                curstr = curstr + str[pos]
+                pos = pos + 1
+            pos = pos + 1 # skip '}'
+
+            curstr = curstr + "$"
+
+            while pos<len(str) and whitespace(str[pos]):
+                pos = pos + 1
+
+            while pos<len(str) and not whitespace(str[pos]):
+                curstr = curstr + str[pos]
+                pos = pos + 1
+
+            # now the curstr is of a $ b form where a is the content of {} info and b is the specific head
 
         else:
             while pos<len(str) and not whitespace(str[pos]): # get a continuous string
@@ -381,10 +399,10 @@ class Expr_multi:
 
         #print (curstr)
 
-        if curstr in Token.function: # the curstr is the function name
-            token_type = 2
-            function_content, pos = self.get_content(str, pos)
-            curstr = curstr + ' $ ' + function_content
+        # if curstr in Token.function: # the curstr is the function name
+        #     token_type = 2
+        #     function_content, pos = self.get_content(str, pos)
+        #     curstr = curstr + ' $ ' + function_content
 
 
         token = Token(curstr)
@@ -427,16 +445,18 @@ class Expr_multi:
 
 
     def replace_with_csv(self, token, row): # the token's type is "head"
-        col_type = Expr.col_type
-        df = Expr.df
+        df = self.csv_dict_list[token.fileid]["df"]
         cor_element = df.iloc[row][token.element] # this is string reading from csv
         #print (cor_element)
         return Token(cor_element)
 
 
 
-    def cal(self, num1, num2, cur_op, row, condition=None): # all of the parameters are of the token form
+    def cal(self, num1, num2, cur_op, row=0, condition=None): # all of the parameters are of the token form
         print (cur_op.element, num1.element, num2.element)
+
+        if num1.element == "Pass" or num2.element == "Pass":
+            return Token("Pass")
 
         if num1.type == "head":
             num1 = self.replace_with_csv(num1, row)
@@ -507,72 +527,72 @@ class Expr_multi:
 
 
 
-    def replace_same(self, str, row):
-        df = Expr.df
-        new_rule = ""
-        pos = 0
+    # def replace_same(self, str, row):
+    #     df = Expr.df
+    #     new_rule = ""
+    #     pos = 0
+    #
+    #     # replace the parameters with the formal ones
+    #     while pos<len(str):
+    #         while pos<len(str) and whitespace(str[pos]): # skip the whitespace
+    #             pos = pos + 1
+    #
+    #         curstr = ""
+    #         while pos<len(str) and not whitespace(str[pos]): # get a continuous string
+    #             curstr = curstr + str[pos]
+    #             pos = pos + 1
+    #         #print (curstr)
+    #
+    #         if len(curstr)>5 and curstr[0:5]=="same_":
+    #             head = curstr[5:]
+    #             new_rule = new_rule + head + " == " + df.iloc[row][head] + ' '
+    #             continue
+    #
+    #         new_rule = new_rule + curstr + ' ' # the other remain the same
+    #
+    #     return new_rule
 
-        # replace the parameters with the formal ones
-        while pos<len(str):
-            while pos<len(str) and whitespace(str[pos]): # skip the whitespace
-                pos = pos + 1
-
-            curstr = ""
-            while pos<len(str) and not whitespace(str[pos]): # get a continuous string
-                curstr = curstr + str[pos]
-                pos = pos + 1
-            #print (curstr)
-
-            if len(curstr)>5 and curstr[0:5]=="same_":
-                head = curstr[5:]
-                new_rule = new_rule + head + " == " + df.iloc[row][head] + ' '
-                continue
-
-            new_rule = new_rule + curstr + ' ' # the other remain the same
-
-        return new_rule
 
 
-
-    def count(self, str, row): # parameter is of string form
-        # start from "row"
-        print ("Process count function: " + str)
-
-        df = Expr.df
-        (df_row, df_col) = df.shape
-
-        parameter_list = str.split(',')
-        if len(parameter_list) == 1:
-            [arguments] = parameter_list
-            constraint = None
-        else:
-            [arguments, constraint] = parameter_list
-        arguments = arguments.strip()
-
-        if constraint!=None:
-            constraint = self.replace_same(constraint, row)
-
-        print (arguments)
-        print (constraint)
-
-        tmp_row = row
-        tmp_list = []
-        while tmp_row < df_row:
-            print ("tmp_row", tmp_row)
-            if constraint==None:
-                if df.iloc[tmp_row][arguments] not in tmp_list:
-                    tmp_list.append(df.iloc[tmp_row][arguments])
-                tmp_row = tmp_row + 1
-            else:
-                meet_constraint = self.read_rule(constraint, tmp_row)
-                if meet_constraint==False:
-                    break
-                if df.iloc[tmp_row][arguments] not in tmp_list:
-                    tmp_list.append(df.iloc[tmp_row][arguments])
-                tmp_row = tmp_row + 1
-
-        #print (tmp_list)
-        return (len(tmp_list), tmp_row)
+    # def count(self, str, row): # parameter is of string form
+    #     # start from "row"
+    #     print ("Process count function: " + str)
+    #
+    #     df = Expr.df
+    #     (df_row, df_col) = df.shape
+    #
+    #     parameter_list = str.split(',')
+    #     if len(parameter_list) == 1:
+    #         [arguments] = parameter_list
+    #         constraint = None
+    #     else:
+    #         [arguments, constraint] = parameter_list
+    #     arguments = arguments.strip()
+    #
+    #     if constraint!=None:
+    #         constraint = self.replace_same(constraint, row)
+    #
+    #     print (arguments)
+    #     print (constraint)
+    #
+    #     tmp_row = row
+    #     tmp_list = []
+    #     while tmp_row < df_row:
+    #         print ("tmp_row", tmp_row)
+    #         if constraint==None:
+    #             if df.iloc[tmp_row][arguments] not in tmp_list:
+    #                 tmp_list.append(df.iloc[tmp_row][arguments])
+    #             tmp_row = tmp_row + 1
+    #         else:
+    #             meet_constraint = self.read_rule(constraint, tmp_row)
+    #             if meet_constraint==False:
+    #                 break
+    #             if df.iloc[tmp_row][arguments] not in tmp_list:
+    #                 tmp_list.append(df.iloc[tmp_row][arguments])
+    #             tmp_row = tmp_row + 1
+    #
+    #     #print (tmp_list)
+    #     return (len(tmp_list), tmp_row)
 
 
 
@@ -638,14 +658,15 @@ class Token:
         "||": 1
     }
 
-    function = {
-        "count": Expr.count
-    }
+    # function = {
+    #     "count": Expr.count
+    # }
 
 
     def __init__(self, str):
-        # if int, directly create the object for convenience
-        if isinstance(str, int):
+        self.fileid = None # reserved for recording fileid since not one csv is analyzed
+
+        if isinstance(str, int): # if int, directly create the object
             self.isoperand = 1
             self.type = "dec_num"
             self.element = str # here the element of int type
@@ -668,9 +689,12 @@ class Token:
         # operand
         else:
             self.isoperand = 1
-            [type, element] = self.operand_transfer(str)
+            tmp_info = self.operand_transfer(str)
+            [type, element] = tmp_info[0:2]
             self.type = type
             self.element = element
+            if type=="head":
+                self.fileid = tmp_info[2]
 
 
     def operand_transfer(self, str): # if the operand is string, it may be the head of the csv file
@@ -679,11 +703,13 @@ class Token:
         elif re.compile("^0x[0-9a-fA-F]+").match(str): # hexadecimal number
             return ["hex_num", hex(int(str, 16))]
         else: # string case
-            col_type = Expr.col_type
-            if str in col_type: # the string is the head of the csv
-                return ["head", str]
-            else:
-                return ["string", str]
+            # for fileid in range(len(Expr_multi.csv_dict_list)):
+            #     col_type = Expr_multi.csv_dict_list[fileid]["col_type"]
+            #     if str in col_type: # the string is the head of the csv
+            #         return ["head", str, fileid]
+            # else:
+            #     # here string is replaced earlier
+            return ["string", str]
             # Notice str case includes many circumstances such as expression with condition and function
 
 
@@ -717,13 +743,21 @@ if __name__ == "__main__":
     # expression = "bit32UciPktNum == count(bit16UciPktTag, same_bit16UeInst && same_FrmNo && same_SubfrmNo)" #test function
     # expression = "bit16PucchUserGrpNum == count(bit16UeInst, same_FrmNo && same_SubfrmNo)" #test function
 
-    expression = "bit16PucchScheInfoTag == 0x8003 \n [bit16UciPktTag == 0x8101] (bit16UciPktSize == 3) \n  \
-                 [bit16UciPktTag == 0x8102] bit16UciPktSize == 4 || bit16UciPktSize == 6 || bit16UciPktSize == 8 || bit16UciPktSize == 16 \n \
-                 bit16PucchUserGrpNum == count(bit16UeInst, same_FrmNo && same_SubfrmNo)"
+    #expression = "bit16PucchScheInfoTag == 0x8003 \n [bit16UciPktTag == 0x8101] (bit16UciPktSize == 3) \n  \
+    #             [bit16UciPktTag == 0x8102] bit16UciPktSize == 4 || bit16UciPktSize == 6 || bit16UciPktSize == 8 || bit16UciPktSize == 16 \n \
+    #             bit16PucchUserGrpNum == count(bit16UeInst, same_FrmNo && same_SubfrmNo)"
 
 
-    filename = "Sample.csv"
-    a = Expr(expression, filename)
+    #expression = "{1:} Tag == 1"
+    #expression = "{1:FrmNo,SubFrmNo} Tag == {2:帧号,子帧号} Tag - 1"
+    expression = "6 * {1:FrmNo,SubFrmNo} Tag - {3:FrmNo,SubFrmNo} Tag = {2:帧号,子帧号} Tag"
+
+
+    filename1 = "test_multiple_1.csv"
+    filename2 = "test_multiple_2.csv"
+    filename3 = "test_multiple_3.csv"
+    filename_list = [filename1,filename2,filename3]
+    a = Expr_multi(expression, filename_list)
     a.judge()
 
 
