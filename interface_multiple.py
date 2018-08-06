@@ -116,17 +116,17 @@ class Single(tk.Frame):
         headlabel = tk.Label(topframe, text="Head")
         self.head_keyvar = tk.StringVar()
         self.head_keyvar.set("Title in CSV")
-        #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        self.headcombobox = ttk.Combobox()
-
-
-
+        self.headcombobox = ttk.Combobox(topframe, values=["Empty"], textvariable=self.head_keyvar, state="disabled")
+        headbutton = tk.Button(topframe, text="Add Head", command=self.__add_head)
 
 
         # -- 放置位置
-        glabel.grid(row=0, column=0, sticky=tk.W)
-        gentry.grid(row=0, column=1)
-        gbutton.grid(row=0, column=2)
+        glabel.place(x=0, y=5)
+        gentry.place(x=70, y=5)
+        gbutton.place(x=250, y=0)
+        headlabel.place(x=290, y=5)
+        self.headcombobox.place(x=335, y=5)
+        headbutton.place(x=510, y=0)
 
         # -- 绑定事件
         gentry.bind('<Return>', func=self.__refresh)
@@ -140,11 +140,6 @@ class Single(tk.Frame):
         rule_bottombar = tk.Scrollbar(ruletext_frame, orient=tk.HORIZONTAL)
         self.rule_text = tk.Text(ruletext_frame, width=80, height=10, yscrollcommand=rule_rightbar.set, xscrollcommand=rule_bottombar.set, wrap="none") # 设置滚动条 - 不换行
         # font = {"宋体"，12, "normal"}
-        headlabel = tk.Label(ruleframe, text="Field Name")
-        self.head_keyvar = tk.StringVar()
-        self.head_keyvar.set("Title in CSV")
-        self.headcombobox = ttk.Combobox(ruleframe, values=["Empty"], textvariable=self.head_keyvar, state="disabled")
-        headbutton = tk.Button(ruleframe, text="Add", command=self.__add_head)
         clearbutton= tk.Button(ruleframe, text="  Clear  ", command=self.__clear_rule)
         rulebutton = tk.Button(ruleframe, text="Analyze", command=self.__analyze)
 
@@ -156,17 +151,12 @@ class Single(tk.Frame):
         rulelabel.place(x=0, y=0)
         ruletext_frame.place(x=0, y=20)
 
-        headlabel.place(x=5, y=int(ruletext_frame.place_info()['y'])+165)
-        self.headcombobox.place(x=80, y=int(headlabel.place_info()['y']))
-        headbutton.place(x=250, y=int(headlabel.place_info()['y'])-5)
-        clearbutton.place(x=440, y=int(headlabel.place_info()['y'])-5)
-        rulebutton.place(x=510, y=int(headlabel.place_info()['y'])-5)
+        clearbutton.place(x=440, y=int(ruletext_frame.place_info()['y'])+165-5)
+        rulebutton.place(x=510, y=int(ruletext_frame.place_info()['y'])+165-5)
 
-        # -- 绑定事件
         rule_rightbar.config(command=self.rule_text.yview)
         rule_bottombar.config(command=self.rule_text.xview)
         self.rule_text.bind('<Button-3>', func=self.__popup)
-
 
 
         # 结果区域
@@ -174,7 +164,8 @@ class Single(tk.Frame):
         resulttext_frame = tk.Frame(resultframe) # 放rule_text和rule_rightbar
         result_rightbar = tk.Scrollbar(resulttext_frame, orient=tk.VERTICAL)
         result_bottombar = tk.Scrollbar(resulttext_frame, orient=tk.HORIZONTAL)
-        self.result_text = tk.Text(resulttext_frame, width=80, height=20, yscrollcommand=result_rightbar.set, xscrollcommand=result_bottombar.set, wrap="none")
+        self.result_text = tk.Text(resulttext_frame, width=80, height=25, yscrollcommand=result_rightbar.set, xscrollcommand=result_bottombar.set, wrap="none")
+        deletebutton = tk.Button(resultframe, text="Delete Result", command=self.__clear_result)
         self.switchbutton = tk.Button(resultframe, text="Switch Result", command=self.switch_result, state="disabled")
 
         # -- 放置位置
@@ -184,9 +175,10 @@ class Single(tk.Frame):
 
         result_label.place(x=0, y=0)
         resulttext_frame.place(x=0, y=20)
-        self.switchbutton.place(x=478, y=310)
+        deletebutton.place(x=440, y=380)
+        self.switchbutton.place(x=510, y=380)
 
-        # -- 绑定事件
+        # -- 设置命令
         result_rightbar.config(command=self.result_text.yview)
         result_bottombar.config(command=self.result_text.xview)
 
@@ -221,7 +213,7 @@ class Single(tk.Frame):
             self.rule_text.delete(SEL_FIRST,SEL_LAST)
         except: pass
 
-
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     def __openfile(self):
         self.filename = filedialog.askopenfilename(title="Open File", initialdir=self.csv_dir, filetypes=[('CSV File','*.csv'),('All Files','*')])
         self.entryvar.set(self.filename)
