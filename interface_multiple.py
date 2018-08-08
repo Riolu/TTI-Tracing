@@ -46,6 +46,11 @@ class Application(tk.Tk):
         self.resizable(width=False, height=False)
         self.columnconfigure(0, minsize=50)
 
+        container = tk.Frame(self)
+        container.pack(side="top", fill="both", expand=True)
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(0, weight=1)
+
         self.frames = {}
         for F in (Single, Multi):
             frame = F(container, self)
@@ -122,7 +127,7 @@ class Single(tk.Frame):
 
         # -- 放置位置
         glabel.place(x=0, y=5)
-        gentry.place(x=70, y=5)
+        gentry.place(x=80, y=5)
         gbutton.place(x=250, y=0)
         headlabel.place(x=290, y=5)
         self.headcombobox.place(x=335, y=5)
@@ -175,8 +180,8 @@ class Single(tk.Frame):
 
         result_label.place(x=0, y=0)
         resulttext_frame.place(x=0, y=20)
-        deletebutton.place(x=440, y=380)
-        self.switchbutton.place(x=510, y=380)
+        deletebutton.place(x=400, y=380)
+        self.switchbutton.place(x=490, y=380)
 
         # -- 设置命令
         result_rightbar.config(command=self.result_text.yview)
@@ -215,7 +220,7 @@ class Single(tk.Frame):
 
 
     def __openfile(self):
-        self.filename = filedialog.askopenfilename(title="Open File", initialdir=self.csv_dir, filetypes=[('CSV File','*.csv'),('All Files','*')])
+        self.filename = filedialog.askopenfilename(title="Open File", initialdir=self.root.csv_dir, filetypes=[('CSV File','*.csv'),('All Files','*')])
         self.entryvar.set(self.filename.split('/')[-1])
 
         if not self.filename:
@@ -329,7 +334,7 @@ class Multi(tk.Frame):
 
         # 顶部区域
         # 第一个读取文件
-        glabel1 = tk.Label(topframe, text="Target file 1:")
+        glabel1 = tk.Label(topframe, text="Target file1:")
         self.entryvar1 = tk.StringVar()
         gentry1 = tk.Entry(topframe, textvariable=self.entryvar1, width=25)
         gbutton1 = tk.Button(topframe, command=lambda: self.__openfile(1), text='...')
@@ -340,7 +345,7 @@ class Multi(tk.Frame):
         headbutton1 = tk.Button(topframe, text="Add Head", command=lambda: self.__add_head(1))
 
         glabel1.place(x=0, y=5)
-        gentry1.place(x=70, y=5)
+        gentry1.place(x=80, y=5)
         gbutton1.place(x=250, y=0)
         headlabel1.place(x=290, y=5)
         self.headcombobox1.place(x=335, y=5)
@@ -348,7 +353,7 @@ class Multi(tk.Frame):
 
 
         # 第二个读取文件
-        glabel2 = tk.Label(topframe, text="Target file 2:")
+        glabel2 = tk.Label(topframe, text="Target file2:")
         self.entryvar2 = tk.StringVar()
         gentry2 = tk.Entry(topframe, textvariable=self.entryvar2, width=25)
         gbutton2 = tk.Button(topframe, command=lambda: self.__openfile(2), text = '...')
@@ -359,7 +364,7 @@ class Multi(tk.Frame):
         headbutton2 = tk.Button(topframe, text="Add Head", command=lambda: self.__add_head(2))
 
         glabel2.place(x=0, y=40)
-        gentry2.place(x=70, y=40)
+        gentry2.place(x=80, y=40)
         gbutton2.place(x=250, y=40-5)
         headlabel2.place(x=290, y=40)
         self.headcombobox2.place(x=335, y=40)
@@ -367,7 +372,7 @@ class Multi(tk.Frame):
 
 
         # 第三个读取文件
-        glabel3 = tk.Label(topframe, text="Target file 3:")
+        glabel3 = tk.Label(topframe, text="Target file3:")
         self.entryvar3 = tk.StringVar()
         gentry3 = tk.Entry(topframe, textvariable=self.entryvar3, width=25)
         gbutton3 = tk.Button(topframe, command=lambda: self.__openfile(3), text = '...')
@@ -378,7 +383,7 @@ class Multi(tk.Frame):
         headbutton3 = tk.Button(topframe, text="Add Head", command=lambda: self.__add_head(3))
 
         glabel3.place(x=0, y=75)
-        gentry3.place(x=70, y=75)
+        gentry3.place(x=80, y=75)
         gbutton3.place(x=250, y=75-5)
         headlabel3.place(x=290, y=75)
         self.headcombobox3.place(x=335, y=75)
@@ -428,8 +433,8 @@ class Multi(tk.Frame):
 
         result_label.place(x=0, y=0)
         resulttext_frame.place(x=0, y=20)
-        deletebutton.place(x=440, y=310)
-        self.switchbutton.place(x=510, y=310)
+        deletebutton.place(x=400, y=310) #440 310
+        self.switchbutton.place(x=490, y=310) #510,310
 
         # -- 设置命令
         result_rightbar.config(command=self.result_text.yview)
@@ -471,7 +476,7 @@ class Multi(tk.Frame):
 
 
     def __openfile(self, i):
-        self.filename = filedialog.askopenfilename(title="Open File", initialdir=self.csv_dir, filetypes=[('CSV File','*.csv'),('All Files','*')])
+        self.filename = filedialog.askopenfilename(title="Open File", initialdir=self.root.csv_dir, filetypes=[('CSV File','*.csv'),('All Files','*')])
         eval("self.entryvar"+str(i)).set(self.filename.split('/')[-1])
 
         if not self.filename:
@@ -620,12 +625,12 @@ class MyMenu():
             self.frame.entryvar.set(self.frame.framename.split('/')[-1])
 
             try:
-                col_type = readCsv(self.root.filename)["col_type"]
-                self.root.head_keyvar.set("Title in CSV")
-                self.root.headcombobox["values"] = list(col_type.keys())  # modify the combobox after csv is read
-                self.root.headcombobox["state"] = "normal"
-                self.root.result_text.delete('1.0', tk.END)
-                self.root.result_text.insert(tk.END, "Loaded " + self.root.filename + "\n\n")
+                col_type = readCsv(self.frame.filename)["col_type"]
+                self.frame.head_keyvar.set("Title in CSV")
+                self.frame.headcombobox["values"] = list(col_type.keys())  # modify the combobox after csv is read
+                self.frame.headcombobox["state"] = "normal"
+                self.frame.result_text.delete('1.0', tk.END)
+                self.frame.result_text.insert(tk.END, "Loaded " + self.frame.filename + "\n\n")
             except:
                 messagebox.showerror("Error", message="The file cannot be opened, please try again.")
 
@@ -646,10 +651,11 @@ class MyMenu():
                 try:
                     col_type = readCsv(self.frame.filename)["col_type"]
                     eval("self.frame.head_keyvar"+str(is_set)).set("Title in CSV")
-                    self.root.headcombobox["values"] = list(col_type.keys())  # modify the combobox after csv is read
-                    self.root.headcombobox["state"] = "normal"
-                    self.root.result_text.delete('1.0', tk.END)
-                    self.root.result_text.insert(tk.END, "Loaded " + self.root.filename + "\n\n")
+                    eval("self.frame.headcombobox"+str(is_set))["values"] = list(col_type.keys())  # modify the combobox after csv is read
+                    eval("self.frame.headcombobox"+str(is_set))["state"] = "normal"
+                    #self.frame.result_text.delete('1.0', tk.END)
+                    self.frame.result_text.insert(tk.END, "Loaded " + self.frame.filename + "\n\n")
+                    self.frame.filename_list[is_set-1] = self.frame.filename
                 except:
                     messagebox.showerror("Error", message="The file cannot be opened, please try again.")
 
@@ -660,14 +666,14 @@ class MyMenu():
             rule_file = open(rule_name, "r")
             rule_content = rule_file.read()
             rule_file.close()
-            self.root.rule_text.delete("1.0", tk.END)
-            self.root.rule_text.insert("1.0", rule_content)
+            self.frame.rule_text.delete("1.0", tk.END)
+            self.frame.rule_text.insert("1.0", rule_content)
 
     def rule_save(self):
         rule_name = asksaveasfilename(title="Save Rule", initialdir=self.root.rule_dir, filetypes=[("Text File",'*.txt')], defaultextension="txt")
         if rule_name:
             rule_file = open(rule_name, "w")
-            rule_content = self.root.rule_text.get("1.0", tk.END)
+            rule_content = self.frame.rule_text.get("1.0", tk.END)
             rule_file.write(rule_content)
             rule_file.close()
             messagebox.showinfo("Info", message="The current rules have been saved.")
@@ -676,7 +682,7 @@ class MyMenu():
         result_name = asksaveasfilename(title="Save Result", initialdir=self.root.result_dir, filetypes=[("Text File", '*.txt')], defaultextension="txt")
         if result_name:
             result_file = open(result_name, "w")
-            result_content = self.root.result_text.get("1.0", tk.END)
+            result_content = self.frame.result_text.get("1.0", tk.END)
             result_file.write(result_content)
             result_file.close()
             messagebox.showinfo("Info", message="The current rules have been saved.")
